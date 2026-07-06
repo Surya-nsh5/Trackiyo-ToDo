@@ -1,0 +1,52 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-bg: #000000;
+  --color-brand-panel: #0a0a0a;
+  --color-brand-panel-hover: #171717;
+  --color-brand-border: #262626;
+  
+  --color-brand-accent: #ffffff;
+  --color-brand-accent-hover: #e5e5e5;
+  
+  --color-brand-text: #ffffff;
+  --color-brand-text-muted: #a3a3a3;
+  --color-brand-text-dark: #525252;
+  
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    @apply bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-300;
+  }
+}
+
+@layer utilities {
+  .dashboard-panel {
+    @apply bg-brand-panel border border-brand-border;
+  }
+  .dashboard-header {
+    @apply bg-[#0a0a0a] border-b border-brand-border font-bold text-center tracking-wide uppercase text-sm py-2;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-brand-border rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-text-dark;
+  }
+}
