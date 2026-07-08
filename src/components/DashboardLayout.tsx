@@ -41,7 +41,8 @@ export const DashboardLayout: React.FC = () => {
         cleanupHabitRealtime();
       };
     }
-  }, [user?.id, setupTaskRealtime, setupHabitRealtime, cleanupTaskRealtime, cleanupHabitRealtime]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
   const currentYear = parseInt(currentMonthId.split('-')[0]);
   const currentMonthNum = currentMonthId.split('-')[1];
 
