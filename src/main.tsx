@@ -12,15 +12,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Force a clean slate on first load of this new version
-if (!localStorage.getItem('v2_migration_complete')) {
-  localStorage.clear();
-  document.cookie.split(";").forEach((c) => {
-    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-  });
-  localStorage.setItem('v2_migration_complete', 'true');
-  window.location.reload();
-}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
