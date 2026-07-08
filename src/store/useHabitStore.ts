@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import api from '../services/api';
 import type { Habit, HabitLog, WellnessLog } from '../types';
 import { format } from 'date-fns';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface HabitState {
@@ -34,6 +34,7 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   realtimeChannel: null,
 
   setupRealtime: (userId: string) => {
+    if (!isSupabaseConfigured) return;
     if (get().realtimeChannel) return;
 
     const channel = supabase

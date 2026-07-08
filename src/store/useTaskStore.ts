@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import api from '../services/api';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export type TaskPriority = 'Low' | 'Medium' | 'High';
@@ -37,6 +37,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   realtimeChannel: null,
 
   setupRealtime: (userId: string) => {
+    if (!isSupabaseConfigured) return;
     if (get().realtimeChannel) return; // Prevent duplicate subscriptions
 
     const channel = supabase
