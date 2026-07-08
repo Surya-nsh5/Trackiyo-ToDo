@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { FiMail, FiLock, FiUser, FiArrowRight, FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
+import { FiMail, FiLock, FiUser, FiArrowRight, FiAlertCircle, FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 
 export const AuthScreen: React.FC = () => {
   const { initialAuthMode, login, signup, resetOnboarding } = useAuthStore();
@@ -11,6 +11,7 @@ export const AuthScreen: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -131,15 +132,23 @@ export const AuthScreen: React.FC = () => {
           </div>
 
           <div className="gsap-auth-stagger flex items-center bg-zinc-50 dark:bg-zinc-900/60 backdrop-blur-sm border border-zinc-200 dark:border-zinc-700/60 rounded-xl px-4 h-12 focus-within:border-zinc-400 dark:focus-within:border-white focus-within:bg-white dark:focus-within:bg-zinc-900/90 focus-within:shadow-[0_0_15px_rgba(0,0,0,0.05)] dark:focus-within:shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-all mb-4">
-            <FiLock className="text-zinc-400 dark:text-zinc-500 mr-3" size={18} />
+            <FiLock className="text-zinc-400 dark:text-zinc-500 mr-3 shrink-0" size={18} />
             <input 
-              type="password" 
+              type={showPassword ? "text" : "password"} 
               placeholder="Password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required 
               className="bg-transparent w-full h-full text-sm text-zinc-900 dark:text-white focus:outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors focus:outline-none p-1 shrink-0 ml-2"
+              title={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+            </button>
           </div>
 
           <button 
