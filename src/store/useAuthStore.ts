@@ -34,9 +34,20 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initializeAuth: async () => {
     try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        set({ isAuthenticated: false, user: null, isInitializing: false });
+        return;
+      }
       const response = await api.get('/auth/me');
       set({ isAuthenticated: true, user: response.data.user, isInitializing: false });
+      
+      // Set up listener for global unauthorized events (e.g. expired token)
+      window.addEventListener('auth:unauthorized', () => {
+        set({ isAuthenticated: false, user: null });
+      });
     } catch (error) {
+      localStorage.removeItem('access_token');
       set({ isAuthenticated: false, user: null, isInitializing: false });
     }
   },
@@ -49,6 +60,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await api.post('/auth/login', { email, password });
       document.cookie = 'hasVisited=true; path=/; max-age=31536000'; // 1 year
+      
+      if (response.data.session?.access_token) {
+        localStorage.setItem('access_token', response.data.session.access_token);
+      }
+      
       set({
         isAuthenticated: true,
         user: response.data.user,
@@ -63,6 +79,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await api.post('/auth/signup', { name, email, password });
       document.cookie = 'hasVisited=true; path=/; max-age=31536000';
+      
+      if (response.data.session?.access_token) {
+        localStorage.setItem('access_token', response.data.session.access_token);
+      }
+      
       set({
         isAuthenticated: true,
         user: response.data.user,
@@ -76,10 +97,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     try {
       await api.post('/auth/logout');
-      document.cookie = 'hasVisited=false; path=/; max-age=0';
-      set({ isAuthenticated: false, user: null, hasVisited: false });
     } catch (error) {
-      console.error('Logout failed', error);
+      console.error('Logout API failed, but clearing local state anyway', error);
+    } finally {
+      document.cookie = 'hasVisited=false; path=/; max-age=0';
+      localStorage.removeItem('access_token');
+      set({ isAuthenticated: false, user: null, hasVisited: false });
     }
   },
 

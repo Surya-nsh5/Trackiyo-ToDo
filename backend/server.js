@@ -55,8 +55,15 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  console.error('Unhandled Error:', err.stack);
+  const statusCode = err.status || 500;
+  res.status(statusCode).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+    error: err.name || 'ServerError',
+    details: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    statusCode
+  });
 });
 
 app.get('/', (req, res) => {

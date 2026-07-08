@@ -1,23 +1,35 @@
 const { supabaseAdmin } = require('../config/supabase');
 
 const requireAuth = async (req, res, next) => {
-  const token = req.cookies.sb_access_token || req.headers.authorization?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Authentication required' });
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Authentication required. Missing Bearer token.' 
+    });
   }
+
+  const token = authHeader.split(' ')[1];
 
   try {
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
 
     if (error || !user) {
-      return res.status(401).json({ message: 'Invalid or expired token', error: error?.message });
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid or expired token', 
+        error: error?.message 
+      });
     }
 
     req.user = user;
     next();
   } catch (err) {
-    return res.status(500).json({ message: 'Internal server error during authentication' });
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error during authentication' 
+    });
   }
 };
 

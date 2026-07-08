@@ -16,19 +16,14 @@ router.post('/signup', async (req, res) => {
 
     if (error) throw error;
     
-    // Set cookie if session exists
-    if (data.session) {
-      res.cookie('sb_access_token', data.session.access_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: data.session.expires_in * 1000
-      });
-    }
-
-    res.status(201).json({ user: data.user, session: data.session });
+    res.status(201).json({ 
+      success: true,
+      message: 'Signup successful',
+      user: data.user, 
+      session: data.session 
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
@@ -42,13 +37,6 @@ router.post('/login', async (req, res) => {
 
     if (error) throw error;
 
-    res.cookie('sb_access_token', data.session.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: data.session.expires_in * 1000
-    });
-
     // Also get profile
     const { data: profile } = await supabaseAdmin
       .from('profiles')
@@ -57,19 +45,23 @@ router.post('/login', async (req, res) => {
       .single();
 
     res.status(200).json({ 
+      success: true,
+      message: 'Login successful',
       user: { ...data.user, ...profile },
+      session: data.session
     });
   } catch (error) {
-    res.status(401).json({ error: error.message });
+    res.status(401).json({ success: false, error: error.message });
   }
 });
 
 router.post('/logout', requireAuth, async (req, res) => {
   try {
-    res.clearCookie('sb_access_token');
-    res.status(200).json({ message: 'Logged out successfully' });
+    // The actual token invalidation can be done client side for JWTs,
+    // but if we were storing sessions in DB, we'd delete them here.
+    res.status(200).json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -81,9 +73,12 @@ router.get('/me', requireAuth, async (req, res) => {
       .eq('id', req.user.id)
       .single();
       
-    res.status(200).json({ user: { ...req.user, ...profile } });
+    res.status(200).json({ 
+      success: true,
+      user: { ...req.user, ...profile } 
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
