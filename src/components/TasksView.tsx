@@ -105,6 +105,13 @@ const TaskItem = React.memo(({ task, isSelected, onToggle, onSelect, onDelete, s
       </div>
     </div>
   );
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.task === nextProps.task &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.style?.transform === nextProps.style?.transform &&
+    prevProps.style?.height === nextProps.style?.height
+  );
 });
 
 // -----------------------------------------------------------------------------
@@ -146,12 +153,11 @@ export const TasksView: React.FC = () => {
       description: '',
       priority: newTaskPriority,
       category: newTaskCategory,
-      due_date: null,
-      is_completed: false
+      due_date: null
     });
     
     setNewTaskTitle('');
-  }, [newTaskTitle, newTaskPriority, addTask]);
+  }, [newTaskTitle, newTaskPriority, newTaskCategory, addTask]);
 
   const handleToggleSelection = useCallback((id: string) => {
     setSelectedTaskIds(prev => {

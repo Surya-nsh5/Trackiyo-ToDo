@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import api from '../services/api';
 import type { Habit, HabitLog, WellnessLog } from '../types';
 import { format } from 'date-fns';
+import { supabase } from '../lib/supabase';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface HabitState {
   habits: Habit[];
@@ -9,6 +11,7 @@ interface HabitState {
   wellnessLogs: WellnessLog;
   currentMonthId: string;
   isLoading: boolean;
+  realtimeChannel: RealtimeChannel | null;
   
   setCurrentMonth: (monthId: string) => Promise<void>;
   loadData: () => Promise<void>;
@@ -16,6 +19,8 @@ interface HabitState {
   updateWellnessLog: (dateStr: string, type: 'mood' | 'sleep', value: number | null) => Promise<void>;
   addHabit: (name: string, icon: string, monthlyGoal: number) => Promise<void>;
   deleteHabit: (habitId: string) => Promise<void>;
+  setupRealtime: (userId: string) => void;
+  cleanupRealtime: () => void;
 }
 
 const getCurrentMonthId = () => format(new Date(), 'yyyy-MM');
@@ -26,6 +31,95 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   wellnessLogs: {},
   currentMonthId: getCurrentMonthId(),
   isLoading: false,
+  realtimeChannel: null,
+
+  setupRealtime: (userId: string) => {
+    if (get().realtimeChannel) return;
+
+    const channel = supabase
+      .channel('habits_wellness_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'habits', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload;
+          set((state) => {
+            const currentHabits = [...state.habits];
+            if (eventType === 'INSERT') {
+              if (!currentHabits.some(h => h.id === newRecord.id)) {
+                return { habits: [...currentHabits, newRecord as Habit] };
+              }
+            } else if (eventType === 'UPDATE') {
+              return {
+                habits: currentHabits.map(h => h.id === newRecord.id ? (newRecord as Habit) : h)
+              };
+            } else if (eventType === 'DELETE') {
+              return {
+                habits: currentHabits.filter(h => h.id !== oldRecord.id)
+              };
+            }
+            return state;
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'habit_logs', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload;
+          if (eventType === 'INSERT' || eventType === 'UPDATE') {
+            const key = `${newRecord.habit_id}_${newRecord.log_date}`;
+            set((state) => ({
+              habitLogs: {
+                ...state.habitLogs,
+                [key]: newRecord.completed
+              }
+            }));
+          } else if (eventType === 'DELETE') {
+            const key = `${oldRecord.habit_id}_${oldRecord.log_date}`;
+            set((state) => {
+               const nextLogs = { ...state.habitLogs };
+               delete nextLogs[key];
+               return { habitLogs: nextLogs };
+            });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'wellness', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload;
+          if (eventType === 'INSERT' || eventType === 'UPDATE') {
+            const date = newRecord.log_date;
+            set((state) => ({
+              wellnessLogs: {
+                ...state.wellnessLogs,
+                [date]: { mood: newRecord.mood, sleep: newRecord.sleep }
+              }
+            }));
+          } else if (eventType === 'DELETE') {
+            const date = oldRecord.log_date;
+            set((state) => {
+               const nextLogs = { ...state.wellnessLogs };
+               delete nextLogs[date];
+               return { wellnessLogs: nextLogs };
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    set({ realtimeChannel: channel });
+  },
+
+  cleanupRealtime: () => {
+    const { realtimeChannel } = get();
+    if (realtimeChannel) {
+      supabase.removeChannel(realtimeChannel);
+      set({ realtimeChannel: null });
+    }
+  },
 
   setCurrentMonth: async (monthId: string) => {
     set({ currentMonthId: monthId });
@@ -74,7 +168,6 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     const isCurrentlyChecked = habitLogs[key] || false;
     const newStatus = !isCurrentlyChecked;
     
-    // Optimistic update
     set({
       habitLogs: {
         ...habitLogs,
@@ -90,7 +183,6 @@ export const useHabitStore = create<HabitState>((set, get) => ({
       });
     } catch (error) {
       console.error('Failed to toggle habit', error);
-      // Revert on error
       set({
         habitLogs: {
           ...get().habitLogs,
@@ -105,7 +197,6 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     const currentData = wellnessLogs[dateStr] || { mood: null, sleep: null };
     const newData = { ...currentData, [type]: value };
     
-    // Optimistic update
     set({
       wellnessLogs: {
         ...wellnessLogs,
@@ -120,7 +211,6 @@ export const useHabitStore = create<HabitState>((set, get) => ({
       });
     } catch (error) {
       console.error('Failed to update wellness log', error);
-      // Revert on error
       set({
         wellnessLogs: {
           ...get().wellnessLogs,
@@ -131,28 +221,56 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   },
 
   addHabit: async (name: string, icon: string, monthlyGoal: number) => {
+    const tempId = `temp-${Date.now()}`;
+    const { habits } = get();
+    
+    const optimisticHabit: Habit = {
+      id: tempId,
+      name,
+      icon,
+      monthly_goal: monthlyGoal,
+      order_index: habits.length,
+      created_at: new Date().toISOString()
+    };
+    
+    set({ habits: [...habits, optimisticHabit] });
+    
     try {
-      const { habits } = get();
       const response = await api.post('/habits', {
         name,
         icon,
         monthlyGoal,
-        order_index: habits.length
+        order_index: optimisticHabit.order_index
       });
       
-      set({ habits: [...habits, response.data] });
+      set((state) => {
+        // deduplicate
+        if (state.habits.some(h => h.id === response.data.id)) {
+           return { habits: state.habits.filter(h => h.id !== tempId) };
+        }
+        return {
+           habits: state.habits.map(h => h.id === tempId ? response.data : h)
+        };
+      });
     } catch (error) {
       console.error('Failed to add habit', error);
+      set((state) => ({ habits: state.habits.filter(h => h.id !== tempId) }));
     }
   },
 
   deleteHabit: async (habitId: string) => {
+    const originalHabit = get().habits.find(h => h.id === habitId);
+    if (!originalHabit) return;
+    
+    set((state) => ({ habits: state.habits.filter(h => h.id !== habitId) }));
+    
     try {
       await api.delete(`/habits/${habitId}`);
-      const { habits } = get();
-      set({ habits: habits.filter(h => h.id !== habitId) });
     } catch (error) {
       console.error('Failed to delete habit', error);
+      set((state) => ({ 
+        habits: [...state.habits, originalHabit].sort((a, b) => (a.order_index || 0) - (b.order_index || 0)) 
+      }));
     }
   }
 }));

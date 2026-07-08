@@ -16,8 +16,8 @@ import { FiChevronLeft, FiChevronRight, FiHome, FiGrid, FiActivity, FiSettings, 
 type Tab = 'HOME' | 'TASKS' | 'GRID' | 'WELLNESS';
 
 export const DashboardLayout: React.FC = () => {
-  const { currentMonthId, setCurrentMonth, loadData } = useHabitStore();
-  const { fetchTasks } = useTaskStore();
+  const { currentMonthId, setCurrentMonth, loadData, setupRealtime: setupHabitRealtime, cleanupRealtime: cleanupHabitRealtime } = useHabitStore();
+  const { fetchTasks, setupRealtime: setupTaskRealtime, cleanupRealtime: cleanupTaskRealtime } = useTaskStore();
   
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<Tab>('HOME');
@@ -29,7 +29,18 @@ export const DashboardLayout: React.FC = () => {
     fetchTasks();
   }, [loadData, fetchTasks]);
 
-
+  // Setup Realtime
+  React.useEffect(() => {
+    if (user?.id) {
+      setupTaskRealtime(user.id);
+      setupHabitRealtime(user.id);
+      
+      return () => {
+        cleanupTaskRealtime();
+        cleanupHabitRealtime();
+      };
+    }
+  }, [user?.id, setupTaskRealtime, setupHabitRealtime, cleanupTaskRealtime, cleanupHabitRealtime]);
   const currentYear = parseInt(currentMonthId.split('-')[0]);
   const currentMonthNum = currentMonthId.split('-')[1];
 

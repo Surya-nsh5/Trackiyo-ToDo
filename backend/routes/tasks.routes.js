@@ -10,7 +10,8 @@ router.get('/', async (req, res) => {
     const supabase = createSupabaseClient(req);
     const { data, error } = await supabase
       .from('tasks')
-      .select('*')
+      .select('id, title, description, priority, category, due_date, created_at, is_completed')
+      .eq('user_id', req.user.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -35,7 +36,7 @@ router.post('/', async (req, res) => {
         category: category || 'General',
         due_date
       }])
-      .select()
+      .select('id, title, description, priority, category, due_date, created_at, is_completed')
       .single();
 
     if (error) throw error;
@@ -56,7 +57,7 @@ router.put('/:id', async (req, res) => {
       .update(updates)
       .eq('id', id)
       .eq('user_id', req.user.id)
-      .select()
+      .select('id, title, description, priority, category, due_date, created_at, is_completed')
       .single();
 
     if (error) throw error;

@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
     const supabase = createSupabaseClient(req);
     const { month, year } = req.query;
     
-    let query = supabase.from('wellness').select('*');
+    let query = supabase.from('wellness').select('id, log_date, mood, sleep, notes').eq('user_id', req.user.id);
     
     if (month && year) {
       const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
         sleep,
         notes
       }, { onConflict: 'user_id,log_date' })
-      .select()
+      .select('id, log_date, mood, sleep, notes')
       .single();
 
     if (error) throw error;

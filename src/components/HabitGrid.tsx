@@ -6,6 +6,24 @@ import { FiTrash2, FiCheck, FiX } from 'react-icons/fi';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import type { Habit } from '../types';
+
+const HabitCell = React.memo(({ habit, dateStr, isChecked, onToggle }: { habit: Habit; dateStr: string; isChecked: boolean; onToggle: (id: string, date: string) => void }) => {
+  return (
+    <div className="w-24 flex-shrink-0 flex items-center justify-center border-r border-zinc-200 dark:border-zinc-700/50 transition-colors duration-300">
+      <button 
+        aria-label={`Toggle ${habit.name} for ${dateStr}`}
+        className={`gsap-habit-cell w-6 h-6 rounded-lg border-2 transition-all duration-300 flex items-center justify-center hover:scale-110 active:scale-95
+          ${isChecked 
+            ? 'bg-black border-black shadow-[0_0_15px_rgba(0,0,0,0.2)] dark:bg-white dark:border-white dark:shadow-[0_0_15px_rgba(255,255,255,0.4)]' 
+            : 'bg-transparent border-zinc-300 hover:border-zinc-500 dark:border-zinc-700 dark:hover:border-zinc-500'}`}
+        onClick={() => onToggle(habit.id, dateStr)}
+      >
+        {isChecked && <svg aria-hidden="true" className="w-4 h-4 text-white dark:text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+      </button>
+    </div>
+  );
+});
 
 export const HabitGrid: React.FC = () => {
   const { habits, habitLogs, currentMonthId, isLoading, toggleHabitLog, addHabit, deleteHabit } = useHabitStore();
@@ -196,18 +214,13 @@ export const HabitGrid: React.FC = () => {
                 {habits.map((habit) => {
                   const isChecked = !!habitLogs[`${habit.id}_${d.dateStr}`];
                   return (
-                    <div key={`cell-${habit.id}-${d.dateStr}`} className="w-24 flex-shrink-0 flex items-center justify-center border-r border-zinc-200 dark:border-zinc-700/50 transition-colors duration-300">
-                      <button 
-                        aria-label={`Toggle ${habit.name} for ${d.dateStr}`}
-                        className={`gsap-habit-cell w-6 h-6 rounded-lg border-2 transition-all duration-300 flex items-center justify-center hover:scale-110 active:scale-95
-                          ${isChecked 
-                            ? 'bg-black border-black shadow-[0_0_15px_rgba(0,0,0,0.2)] dark:bg-white dark:border-white dark:shadow-[0_0_15px_rgba(255,255,255,0.4)]' 
-                            : 'bg-transparent border-zinc-300 hover:border-zinc-500 dark:border-zinc-700 dark:hover:border-zinc-500'}`}
-                        onClick={() => toggleHabitLog(habit.id, d.dateStr)}
-                      >
-                        {isChecked && <svg aria-hidden="true" className="w-4 h-4 text-white dark:text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-                      </button>
-                    </div>
+                    <HabitCell
+                      key={`cell-${habit.id}-${d.dateStr}`}
+                      habit={habit}
+                      dateStr={d.dateStr}
+                      isChecked={isChecked}
+                      onToggle={toggleHabitLog}
+                    />
                   );
                 })}
               </div>

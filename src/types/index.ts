@@ -2,7 +2,9 @@ export interface Habit {
   id: string;
   name: string;
   icon: string;
-  monthlyGoal: number;
+  monthly_goal: number;
+  order_index?: number;
+  created_at?: string;
 }
 
 // Key format for HabitLog: `${habitId}_${year}-${month}-${day}` (e.g. 'h1_2026-06-01')

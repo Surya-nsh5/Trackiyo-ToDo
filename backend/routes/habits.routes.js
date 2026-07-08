@@ -10,7 +10,8 @@ router.get('/', async (req, res) => {
     const supabase = createSupabaseClient(req);
     const { data: habits, error: habitsError } = await supabase
       .from('habits')
-      .select('*')
+      .select('id, name, icon, monthly_goal, order_index, created_at')
+      .eq('user_id', req.user.id)
       .order('order_index', { ascending: true });
 
     if (habitsError) throw habitsError;
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
     // Get month/year from query if provided (e.g. ?month=06&year=2026)
     const { month, year } = req.query;
     
-    let logsQuery = supabase.from('habit_logs').select('*');
+    let logsQuery = supabase.from('habit_logs').select('id, habit_id, log_date, completed').eq('user_id', req.user.id);
     if (month && year) {
       // Create date boundaries
       const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
@@ -50,7 +51,7 @@ router.post('/', async (req, res) => {
         monthly_goal: monthlyGoal,
         order_index: order_index || 0
       }])
-      .select()
+      .select('id, name, icon, monthly_goal, order_index, created_at')
       .single();
 
     if (error) throw error;
@@ -92,7 +93,7 @@ router.post('/logs', async (req, res) => {
         log_date,
         completed
       }, { onConflict: 'habit_id,log_date' })
-      .select()
+      .select('id, habit_id, log_date, completed')
       .single();
 
     if (error) throw error;
