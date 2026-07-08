@@ -27,7 +27,8 @@ export const DashboardLayout: React.FC = () => {
   React.useEffect(() => {
     loadData();
     fetchTasks();
-  }, [loadData, fetchTasks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Setup Realtime
   React.useEffect(() => {

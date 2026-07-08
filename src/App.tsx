@@ -22,7 +22,8 @@ const App: React.FC = () => {
   useEffect(() => {
     initializeTheme();
     initializeAuth();
-  }, [initializeAuth, initializeTheme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (isInitializing) {
     return <LoadingScreen />;
