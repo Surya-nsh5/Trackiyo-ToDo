@@ -76,7 +76,7 @@ export const OverallStats: React.FC = () => {
         <div className="flex-1 flex flex-row items-center justify-center gap-6 relative z-10 mt-2">
           {/* Pie Chart */}
           <div className="w-32 h-32 md:w-40 md:h-40 relative">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="99%" height="100%">
               <PieChart>
                 <Tooltip 
                   contentStyle={{ 
@@ -144,7 +144,7 @@ export const OverallStats: React.FC = () => {
           {taskCategoryData.length === 0 ? (
             <div className="flex items-center justify-center text-xs font-bold tracking-widest text-zinc-400 dark:text-zinc-600 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl w-full h-full p-4 transition-colors duration-300">NO TASKS</div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="99%" height="100%">
               <PieChart>
                 <Tooltip 
                   contentStyle={{ 

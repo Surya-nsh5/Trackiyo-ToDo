@@ -105,7 +105,7 @@ export const TopCharts: React.FC = () => {
           </div>
         </div>
         <div className="h-[180px] w-full relative z-10">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="99%" height="100%">
             <AreaChart data={dailyProgress} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorHabit" x1="0" y1="0" x2="0" y2="1">
@@ -161,7 +161,7 @@ export const TopCharts: React.FC = () => {
           </div>
         </div>
         <div className="h-[180px] w-full relative z-10">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="99%" height="100%">
             <BarChart data={weeklyProgress} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? "#27272a" : "#e5e7eb"} vertical={false} opacity={0.5} />
               <XAxis 

@@ -121,7 +121,7 @@ export const WellnessTracker: React.FC = () => {
 
       {/* Chart */}
       <div className="gsap-wellness-chart flex-1 p-4 bg-zinc-50 dark:bg-black transition-colors duration-300">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="99%" height="100%">
           <LineChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
             <XAxis dataKey="date" stroke={isDarkMode ? '#27272a' : '#e5e7eb'} tick={false} axisLine={false} />
             <YAxis stroke={isDarkMode ? '#27272a' : '#e5e7eb'} tick={false} axisLine={false} domain={[0, 12]} />
