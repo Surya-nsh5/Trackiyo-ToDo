@@ -3,7 +3,6 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export const PWAReloadPrompt: React.FC = () => {
   const {
-    offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
@@ -16,22 +15,17 @@ export const PWAReloadPrompt: React.FC = () => {
   });
 
   const close = () => {
-    setOfflineReady(false);
     setNeedRefresh(false);
   };
 
-  if (!offlineReady && !needRefresh) return null;
+  if (!needRefresh) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl rounded-2xl p-4 max-w-sm w-full text-zinc-900 dark:text-white transition-colors duration-300">
       <div className="mb-4">
-        {offlineReady ? (
-          <p className="text-sm font-medium">App ready to work offline.</p>
-        ) : (
-          <p className="text-sm font-medium">
-            New content available, click on reload button to update.
-          </p>
-        )}
+        <p className="text-sm font-medium">
+          New content available, click on reload button to update.
+        </p>
       </div>
       <div className="flex justify-end gap-3">
         <button
@@ -40,14 +34,12 @@ export const PWAReloadPrompt: React.FC = () => {
         >
           CLOSE
         </button>
-        {needRefresh && (
-          <button
-            onClick={() => updateServiceWorker(true)}
-            className="px-4 py-2 text-xs font-bold tracking-widest bg-black text-white dark:bg-white dark:text-black rounded-lg hover:scale-105 active:scale-95 transition-transform"
-          >
-            RELOAD
-          </button>
-        )}
+        <button
+          onClick={() => updateServiceWorker(true)}
+          className="px-4 py-2 text-xs font-bold tracking-widest bg-black text-white dark:bg-white dark:text-black rounded-lg hover:scale-105 active:scale-95 transition-transform"
+        >
+          RELOAD
+        </button>
       </div>
     </div>
   );
